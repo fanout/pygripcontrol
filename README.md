@@ -1,4 +1,0 @@
-pygrip
-======
-
-Python GRIP library

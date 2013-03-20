@@ -1,0 +1,19 @@
+PyGrip
+------
+Date: March 20th, 2013
+Author: Justin Karneges <justin@fanout.io>
+
+GRIP library for Python.
+
+Sample usage:
+
+  import grip
+
+  http_body = grip.create_hold_response("mychannel")
+  # django: HttpResponse(http_body, content_type="application/grip-instruct")
+
+  grip.set_control_uri("https://api.fanout.io/realm/myrealm")
+  grip.set_realm("myrealm")
+  grip.set_secret("secret")
+
+  grip.publish_http_response("mychannel", "stuff\n")
