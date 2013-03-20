@@ -38,7 +38,11 @@ class Response:
 		self.body = body
 
 class Format:
-	pass
+	def name(self):
+		pass
+
+	def to_json(self):
+		pass
 
 class HttpResponseFormat(Format):
 	def __init__(self, code=None, reason=None, headers=None, body=None):
@@ -47,8 +51,7 @@ class HttpResponseFormat(Format):
 		self.headers = headers
 		self.body = body
 
-	@staticmethod
-	def name():
+	def name(self):
 		return "http-response"
 
 	def to_json(self):
@@ -71,8 +74,7 @@ class HttpStreamFormat(Format):
 	def __init__(self, content):
 		self.content = content
 
-	@staticmethod
-	def name():
+	def name(self):
 		return "http-stream"
 
 	def to_json(self):
@@ -90,8 +92,7 @@ class HttpRequestFormat(Format):
 		self.headers = headers
 		self.body = body
 
-	@staticmethod
-	def name():
+	def name(self):
 		return "http-request"
 
 	def to_json(self):
@@ -112,14 +113,23 @@ class XmppStanzaFormat(Format):
 	def __init__(self, content):
 		self.content = content
 
-	@staticmethod
-	def name():
+	def name(self):
 		return "xmpp-stanza"
 
 	def to_json(self):
 		out = dict()
 		out["content"] = self.content
 		return out
+
+class FppFormat(Format):
+	def __init__(self, value):
+		self.value = value
+
+	def name(self):
+		return "fpp"
+
+	def to_json(self):
+		return self.value
 
 class Item:
 	def __init__(self, formats, id=None, prev_id=None):
@@ -360,3 +370,9 @@ def publish_xmpp_stanza(channel, xmpp_stanza, id=None, prev_id=None):
 		xmpp_stanza = XmppStanzaFormat(xmpp_stanza)
 
 	publish(channel, Item(xmpp_stanza, id, prev_id))
+
+def publish_fpp(channel, fpp, id=None, prev_id=None):
+	if isinstance(fpp, basestring):
+		fpp = FppFormat(fpp)
+
+	publish(channel, Item(fpp, id, prev_id))
