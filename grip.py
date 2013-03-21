@@ -25,19 +25,19 @@ def _bin_or_text(s):
 			return (False, s)
 	return (True, s.decode("utf-8"))
 
-class Channel:
+class Channel(object):
 	def __init__(self, name, prev_id=None):
 		self.name = name
 		self.prev_id = prev_id
 
-class Response:
+class Response(object):
 	def __init__(self, code=None, reason=None, headers=None, body=None):
 		self.code = code
 		self.reason = reason
 		self.headers = headers
 		self.body = body
 
-class Format:
+class Format(object):
 	def name(self):
 		pass
 
@@ -131,7 +131,7 @@ class FppFormat(Format):
 	def to_json(self):
 		return self.value
 
-class Item:
+class Item(object):
 	def __init__(self, formats, id=None, prev_id=None):
 		self.id = id
 		self.prev_id = prev_id
