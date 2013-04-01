@@ -1,9 +1,13 @@
 PyGrip
 ------
-Date: March 20th, 2013
+Date: March 27th, 2013
 Author: Justin Karneges <justin@fanout.io>
 
 GRIP library for Python.
+
+Requirements:
+
+  pubcontrol
 
 Sample usage:
 
@@ -12,8 +16,7 @@ Sample usage:
   http_body = grip.create_hold_response("mychannel")
   # django: HttpResponse(http_body, content_type="application/grip-instruct")
 
-  grip.set_control_uri("https://api.fanout.io/realm/myrealm")
-  grip.set_realm("myrealm")
-  grip.set_secret("secret")
+  pub = grip.GripPubControl("https://api.fanout.io/realm/myrealm")
+  pub.set_jwt_auth({"iss": "myrealm"}, "secret")
 
-  grip.publish_http_response("mychannel", "stuff\n")
+  pub.publish_http_response("mychannel", "stuff\n")
