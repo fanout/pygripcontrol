@@ -1,6 +1,6 @@
-PyGrip
-------
-Date: March 27th, 2013
+PyGripControl
+-------------
+Date: April 5th, 2013
 Author: Justin Karneges <justin@fanout.io>
 
 GRIP library for Python.
@@ -11,7 +11,7 @@ Requirements:
 
 Sample usage:
 
-  import grip
+  import gripcontrol as grip
 
   http_body = grip.create_hold_response("mychannel")
   # django: HttpResponse(http_body, content_type="application/grip-instruct")
