@@ -1,5 +1,6 @@
 from base64 import b64encode
 from pubcontrol import PubControl, Item, Format
+import json
 
 # returns (boolean is_text, string value)
 def _bin_or_text(s):
