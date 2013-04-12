@@ -1,5 +1,6 @@
 from base64 import b64encode
 from pubcontrol import PubControl, Item, Format
+import json
 
 # returns (boolean is_text, string value)
 def _bin_or_text(s):
@@ -66,29 +67,29 @@ class HttpStreamFormat(Format):
 		return out
 
 class GripPubControl(PubControl):
-	def publish_http_response(channel, http_response, id=None, prev_id=None):
+	def publish_http_response(self, channel, http_response, id=None, prev_id=None):
 		if isinstance(http_response, basestring):
 			http_response = HttpResponseFormat(body=http_response)
 		item = Item(http_response, id, prev_id)
-		super(PubControl, self).publish(channel, item)
+		super(GripPubControl, self).publish(channel, item)
 
-	def publish_http_response_async(channel, http_response, id=None, prev_id=None, callback=None):
+	def publish_http_response_async(self, channel, http_response, id=None, prev_id=None, callback=None):
 		if isinstance(http_response, basestring):
 			http_response = HttpResponseFormat(body=http_response)
 		item = Item(http_response, id, prev_id)
-		super(PubControl, self).publish_async(channel, item, callback)
+		super(GripPubControl, self).publish_async(channel, item, callback)
 
-	def publish_http_stream(channel, http_stream, id=None, prev_id=None):
+	def publish_http_stream(self, channel, http_stream, id=None, prev_id=None):
 		if isinstance(http_stream, basestring):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
-		super(PubControl, self).publish(channel, item)
+		super(GripPubControl, self).publish(channel, item)
 
-	def publish_http_stream_async(channel, http_stream, id=None, prev_id=None, callback=None):
+	def publish_http_stream_async(self, channel, http_stream, id=None, prev_id=None, callback=None):
 		if isinstance(http_stream, basestring):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
-		super(PubControl, self).publish_async(channel, item, callback)
+		super(GripPubControl, self).publish_async(channel, item, callback)
 
 def create_hold(mode, channels, response):
 	hold = dict()
