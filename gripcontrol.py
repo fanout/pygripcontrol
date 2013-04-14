@@ -154,7 +154,7 @@ def create_hold_response(channels, response=None):
 def create_hold_stream(channels, response=None):
 	return create_hold("stream", channels, response)
 
-def validate_sig(token, iss, key):
+def validate_sig(token, key):
 	# jwt expects the token in utf-8
 	if isinstance(token, unicode):
 		token = token.encode("utf-8")
@@ -169,9 +169,6 @@ def validate_sig(token, iss, key):
 		return False
 
 	if _timestamp_utcnow() >= exp:
-		return False
-
-	if claim.get("iss") != iss:
 		return False
 
 	return True
