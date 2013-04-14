@@ -7,6 +7,7 @@ GRIP library for Python.
 
 Requirements:
 
+  jwt
   pubcontrol
 
 Sample usage:

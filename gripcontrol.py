@@ -1,6 +1,9 @@
+from datetime import datetime
+import calendar
 from base64 import b64encode
-from pubcontrol import PubControl, Item, Format
 import json
+import jwt
+from pubcontrol import PubControl, Item, Format
 
 # returns (boolean is_text, string value)
 def _bin_or_text(s):
@@ -11,6 +14,9 @@ def _bin_or_text(s):
 		if i < 0x20 or i >= 0x7f:
 			return (False, s)
 	return (True, s.decode("utf-8"))
+
+def _timestamp_utcnow():
+	return calendar.timegm(datetime.utcnow().utctimetuple())
 
 class Channel(object):
 	def __init__(self, name, prev_id=None):
@@ -147,3 +153,25 @@ def create_hold_response(channels, response=None):
 
 def create_hold_stream(channels, response=None):
 	return create_hold("stream", channels, response)
+
+def validate_sig(token, iss, key):
+	# jwt expects the token in utf-8
+	if isinstance(token, unicode):
+		token = token.encode("utf-8")
+
+	try:
+		claim = jwt.decode(token, key)
+	except:
+		return False
+
+	exp = claim.get("exp")
+	if not exp:
+		return False
+
+	if _timestamp_utcnow() >= exp:
+		return False
+
+	if claim.get("iss") != iss:
+		return False
+
+	return True
