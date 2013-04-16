@@ -57,19 +57,25 @@ class HttpResponseFormat(Format):
 		return out
 
 class HttpStreamFormat(Format):
-	def __init__(self, content):
+	def __init__(self, content=None, close=False):
 		self.content = content
+		self.close = close
+		if not self.close and self.content is None:
+			raise ValueError("content not set")
 
 	def name(self):
 		return "http-stream"
 
 	def export(self):
 		out = dict()
-		is_text, val = _bin_or_text(self.content)
-		if is_text:
-			out["content"] = val
+		if self.close:
+			out["action"] = "close"
 		else:
-			out["content-bin"] = b64encode(val)
+			is_text, val = _bin_or_text(self.content)
+			if is_text:
+				out["content"] = val
+			else:
+				out["content-bin"] = b64encode(val)
 		return out
 
 class GripPubControl(PubControl):
