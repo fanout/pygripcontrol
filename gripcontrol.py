@@ -13,7 +13,7 @@ def _bin_or_text(s):
 		i = ord(c)
 		if i < 0x20 or i >= 0x7f:
 			return (False, s)
-	return (True, s.decode("utf-8"))
+	return (True, s.decode('utf-8'))
 
 def _timestamp_utcnow():
 	return calendar.timegm(datetime.utcnow().utctimetuple())
@@ -38,22 +38,22 @@ class HttpResponseFormat(Format):
 		self.body = body
 
 	def name(self):
-		return "http-response"
+		return 'http-response'
 
 	def export(self):
 		out = dict()
 		if self.code is not None:
-			out["code"] = self.code
+			out['code'] = self.code
 		if self.reason:
-			out["reason"] = self.reason
+			out['reason'] = self.reason
 		if self.headers:
-			out["headers"] = self.headers
+			out['headers'] = self.headers
 		if self.body:
 			is_text, val = _bin_or_text(self.body)
 			if is_text:
-				out["body"] = val
+				out['body'] = val
 			else:
-				out["body-bin"] = b64encode(val)
+				out['body-bin'] = b64encode(val)
 		return out
 
 class HttpStreamFormat(Format):
@@ -61,21 +61,21 @@ class HttpStreamFormat(Format):
 		self.content = content
 		self.close = close
 		if not self.close and self.content is None:
-			raise ValueError("content not set")
+			raise ValueError('content not set')
 
 	def name(self):
-		return "http-stream"
+		return 'http-stream'
 
 	def export(self):
 		out = dict()
 		if self.close:
-			out["action"] = "close"
+			out['action'] = 'close'
 		else:
 			is_text, val = _bin_or_text(self.content)
 			if is_text:
-				out["content"] = val
+				out['content'] = val
 			else:
-				out["content-bin"] = b64encode(val)
+				out['content-bin'] = b64encode(val)
 		return out
 
 class GripPubControl(PubControl):
@@ -106,7 +106,7 @@ class GripPubControl(PubControl):
 def create_hold(mode, channels, response):
 	hold = dict()
 
-	hold["mode"] = mode
+	hold['mode'] = mode
 
 	if isinstance(channels, Channel):
 		channels = [channels]
@@ -121,12 +121,12 @@ def create_hold(mode, channels, response):
 			c = Channel(c)
 
 		ichannel = dict()
-		ichannel["name"] = c.name
+		ichannel['name'] = c.name
 		if c.prev_id:
-			ichannel["prev-id"] = c.prev_id
+			ichannel['prev-id'] = c.prev_id
 		ichannels.append(ichannel)
 
-	hold["channels"] = ichannels
+	hold['channels'] = ichannels
 
 	iresponse = None
 	if response is not None:
@@ -135,42 +135,42 @@ def create_hold(mode, channels, response):
 
 		iresponse = dict()
 		if response.code is not None:
-			iresponse["code"] = response.code
+			iresponse['code'] = response.code
 		if response.reason:
-			iresponse["reason"] = response.reason
+			iresponse['reason'] = response.reason
 		if response.headers:
-			iresponse["headers"] = response.headers
+			iresponse['headers'] = response.headers
 		if response.body:
 			is_text, val = _bin_or_text(response.body)
 			if is_text:
-				iresponse["body"] = val
+				iresponse['body'] = val
 			else:
-				iresponse["body-bin"] = b64encode(val)
+				iresponse['body-bin'] = b64encode(val)
 
 	instruct = dict()
-	instruct["hold"] = hold
+	instruct['hold'] = hold
 	if iresponse:
-		instruct["response"] = iresponse
+		instruct['response'] = iresponse
 
 	return json.dumps(instruct)
 
 def create_hold_response(channels, response=None):
-	return create_hold("response", channels, response)
+	return create_hold('response', channels, response)
 
 def create_hold_stream(channels, response=None):
-	return create_hold("stream", channels, response)
+	return create_hold('stream', channels, response)
 
 def validate_sig(token, key):
 	# jwt expects the token in utf-8
 	if isinstance(token, unicode):
-		token = token.encode("utf-8")
+		token = token.encode('utf-8')
 
 	try:
 		claim = jwt.decode(token, key)
 	except:
 		return False
 
-	exp = claim.get("exp")
+	exp = claim.get('exp')
 	if not exp:
 		return False
 
