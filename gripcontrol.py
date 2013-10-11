@@ -166,7 +166,7 @@ def validate_sig(token, key):
 		token = token.encode('utf-8')
 
 	try:
-		claim = jwt.decode(token, key)
+		claim = jwt.decode(token, key, verify_expiration=False)
 	except:
 		return False
 
