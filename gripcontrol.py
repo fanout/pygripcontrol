@@ -79,6 +79,22 @@ class HttpStreamFormat(Format):
 				out['content-bin'] = b64encode(val)
 		return out
 
+class WebSocketMessageFormat(Format):
+	def __init__(self, content):
+		self.content = content
+
+	def name(self):
+		return 'ws-message'
+
+	def export(self):
+		out = dict()
+		is_text, val = _bin_or_text(self.content)
+		if is_text:
+			out['content'] = val
+		else:
+			out['content-bin'] = b64encode(val)
+		return out
+
 class GripPubControl(PubControl):
 	def publish_http_response(self, channel, http_response, id=None, prev_id=None):
 		if isinstance(http_response, basestring):
