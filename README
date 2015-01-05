@@ -1,6 +1,5 @@
 PyGripControl
 -------------
-Date: April 5th, 2013
 Author: Justin Karneges <justin@fanout.io>
 
 GRIP library for Python.
@@ -12,12 +11,13 @@ Requirements:
 
 Sample usage:
 
+  from base64 import b64decode
   import gripcontrol as grip
 
-  http_body = grip.create_hold_response("mychannel")
-  # django: HttpResponse(http_body, content_type="application/grip-instruct")
+  http_body = grip.create_hold_response('mychannel')
+  # django: HttpResponse(http_body, content_type='application/grip-instruct')
 
-  pub = grip.GripPubControl("https://api.fanout.io/realm/myrealm")
-  pub.set_jwt_auth({"iss": "myrealm"}, "secret")
+  pub = grip.GripPubControl('https://api.fanout.io/realm/myrealm')
+  pub.set_auth_jwt({'iss': 'myrealm'}, b64decode('myrealmkey'))
 
-  pub.publish_http_response("mychannel", "stuff\n")
+  pub.publish_http_response('mychannel', 'stuff\n')
