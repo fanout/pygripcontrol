@@ -1,10 +1,12 @@
 from datetime import datetime
 import calendar
-from base64 import b64encode
+from urlparse import urlparse, parse_qs
+from urllib import urlencode
+from base64 import b64encode, b64decode
 from copy import deepcopy
 import json
 import jwt
-from pubcontrol import PubControl, Item, Format
+from pubcontrol import PubControl, PubControlClient, Item, Format
 
 # returns (boolean is_text, string value)
 def _bin_or_text(s):
@@ -96,34 +98,94 @@ class WebSocketMessageFormat(Format):
 		return out
 
 class GripPubControl(PubControl):
-	def publish_http_response(self, channel, http_response, id=None, prev_id=None):
+	def apply_grip_config(self, config):
+		if not isinstance(config, list):
+			config = [config]
+		for entry in config:
+			if 'control_uri' not in entry:
+				continue
+			client = PubControlClient(entry['control_uri'])
+			if 'control_iss' in entry:
+				client.set_auth_jwt({'iss': entry['control_iss']}, entry['key'])
+			self.add_client(client)
+
+	def publish_http_response(self, channel, http_response, id=None, prev_id=None, blocking=False, callback=None):
 		if isinstance(http_response, basestring):
 			http_response = HttpResponseFormat(body=http_response)
 		item = Item(http_response, id, prev_id)
-		super(GripPubControl, self).publish(channel, item)
+		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
 
-	def publish_http_response_async(self, channel, http_response, id=None, prev_id=None, callback=None):
-		if isinstance(http_response, basestring):
-			http_response = HttpResponseFormat(body=http_response)
-		item = Item(http_response, id, prev_id)
-		super(GripPubControl, self).publish_async(channel, item, callback)
-
-	def publish_http_stream(self, channel, http_stream, id=None, prev_id=None):
+	def publish_http_stream(self, channel, http_stream, id=None, prev_id=None, blocking=False, callback=None):
 		if isinstance(http_stream, basestring):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
-		super(GripPubControl, self).publish(channel, item)
-
-	def publish_http_stream_async(self, channel, http_stream, id=None, prev_id=None, callback=None):
-		if isinstance(http_stream, basestring):
-			http_stream = HttpStreamFormat(http_stream)
-		item = Item(http_stream, id, prev_id)
-		super(GripPubControl, self).publish_async(channel, item, callback)
+		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
 
 class WebSocketEvent(object):
 	def __init__(self, type, content=None):
 		self.type = type
 		self.content = content
+
+def parse_grip_uri(uri):
+	parsed = urlparse(uri)
+	params = parse_qs(parsed.query)
+	iss = None
+	key = None
+	if 'iss' in params:
+		iss = params['iss'][0]
+		del params['iss']
+	if 'key' in params:
+		key = params['key'][0]
+		del params['key']
+	if key is not None and key.startswith('base64:'):
+		key = b64decode(key[7:])
+	qs = urlencode(params, True)
+	path = parsed.path
+	if path.endswith('/'):
+		path = path[:-1]
+	control_uri = parsed.scheme + '://' + parsed.netloc + path
+	if qs:
+		control_uri += '?' + qs
+	out = {'control_uri': control_uri}
+	if iss:
+		out['control_iss'] = iss
+	if key:
+		out['key'] = key
+	return out
+
+def validate_sig(token, key):
+	# jwt expects the token in utf-8
+	if isinstance(token, unicode):
+		token = token.encode('utf-8')
+
+	try:
+		claim = jwt.decode(token, key, verify_expiration=False)
+	except:
+		return False
+
+	exp = claim.get('exp')
+	if not exp:
+		return False
+
+	if _timestamp_utcnow() >= exp:
+		return False
+
+	return True
+
+def create_grip_channel_header(channels):
+	if isinstance(channels, Channel):
+		channels = [channels]
+	elif isinstance(channels, basestring):
+		channels = [Channel(channels)]
+	assert(len(channels) > 0)
+
+	parts = list()
+	for channel in channels:
+		s = channel.name
+		if channel.prev_id is not None:
+			s += '; prev-id=%s' % channel.prev_id
+		parts.append(s)
+	return ', '.join(parts)
 
 def create_hold(mode, channels, response):
 	hold = dict()
@@ -181,25 +243,6 @@ def create_hold_response(channels, response=None):
 
 def create_hold_stream(channels, response=None):
 	return create_hold('stream', channels, response)
-
-def validate_sig(token, key):
-	# jwt expects the token in utf-8
-	if isinstance(token, unicode):
-		token = token.encode('utf-8')
-
-	try:
-		claim = jwt.decode(token, key, verify_expiration=False)
-	except:
-		return False
-
-	exp = claim.get('exp')
-	if not exp:
-		return False
-
-	if _timestamp_utcnow() >= exp:
-		return False
-
-	return True
 
 def decode_websocket_events(body):
 	out = list()
