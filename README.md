@@ -38,7 +38,7 @@ def handler(request):
 
 Publishing:
 
-```pythong
+```python
 from base64 import b64decode
 from gripcontrol import GripPubControl
 
