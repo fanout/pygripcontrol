@@ -82,19 +82,24 @@ class HttpStreamFormat(Format):
 		return out
 
 class WebSocketMessageFormat(Format):
-	def __init__(self, content):
+	def __init__(self, content, binary=False):
 		self.content = content
+		self.binary = binary
 
 	def name(self):
 		return 'ws-message'
 
 	def export(self):
 		out = dict()
-		is_text, val = _bin_or_text(self.content)
-		if is_text:
-			out['content'] = val
-		else:
+		val = self.content
+		if self.binary:
+			if isinstance(val, unicode):
+				val = val.encode('utf-8')
 			out['content-bin'] = b64encode(val)
+		else:
+			if not isinstance(val, unicode):
+				val = val.decode('utf-8')
+			out['content'] = val
 		return out
 
 class GripPubControl(PubControl):
