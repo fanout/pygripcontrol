@@ -79,7 +79,7 @@ from gripcontrol import validate_sig
 is_valid = validate_sig(request['Grip-Sig'], '<key>')
 ```
 
-Long polling example via response _headers_ using the WEBrick gem. The client connects to a GRIP proxy over HTTP and the proxy forwards the request to the origin. The origin subscribes the client to a channel and instructs it to long poll via the response _headers_. Note that with the recent versions of Apache it's not possible to send a 304 response containing custom headers, in which case the response body should be used instead (next usage example below).
+Long polling example via response _headers_. The client connects to a GRIP proxy over HTTP and the proxy forwards the request to the origin. The origin subscribes the client to a channel and instructs it to long poll via the response _headers_. Note that with the recent versions of Apache it's not possible to send a 304 response containing custom headers, in which case the response body should be used instead (next usage example below).
 
 ```python
 try:
@@ -110,7 +110,7 @@ except KeyboardInterrupt:
     server.server_close()
 ```
 
-Long polling example via response _body_ using the WEBrick gem. The client connects to a GRIP proxy over HTTP and the proxy forwards the request to the origin. The origin subscribes the client to a channel and instructs it to long poll via the response _body_.
+Long polling example via response _body_. The client connects to a GRIP proxy over HTTP and the proxy forwards the request to the origin. The origin subscribes the client to a channel and instructs it to long poll via the response _body_.
 
 ```python
 try:
@@ -141,10 +141,63 @@ except KeyboardInterrupt:
     server.server_close()
 ```
 
-WebSocket example using the WEBrick gem and WEBrick WebSocket gem extension. A client connects to a GRIP proxy via WebSockets and the proxy forward the request to the origin. The origin accepts the connection over a WebSocket and responds with a control message indicating that the client should be subscribed to a channel. Note that in order for the GRIP proxy to properly interpret the control messages, the origin must provide a 'grip' extension in the 'Sec-WebSocket-Extensions' header. This is accomplished in the WEBrick WebSocket gem extension by adding the following line to lib/webrick/websocket/server.rb and rebuilding the gem: res['Sec-WebSocket-Extensions'] = 'grip; message-prefix=""'
+WebSocket example using the Tornado 4.0.2 module. A client connects to a GRIP proxy via WebSockets and the proxy forward the request to the origin. The origin accepts the connection over a WebSocket and responds with a control message indicating that the client should be subscribed to a channel. Note that in order for the GRIP proxy to properly interpret the control messages, the origin must provide a 'grip' extension in the 'Sec-WebSocket-Extensions' header. This is accomplished by overriding the 'get' method in the handler and implementing a custom WebSocketProtocol class. Also note that a significant amount of code was removed from the 'get' and '_accept_connection' for the sake of readability and should be replaced if using this code in a real environment.
 
 ```python
+import threading, time
+import tornado.httpserver, tornado.websocket, tornado.ioloop, tornado.web
+from tornado.websocket import WebSocketProtocol13
+from pubcontrol import Item
+from gripcontrol import websocket_control_message, GripPubControl
+from gripcontrol import WebSocketMessageFormat
 
+# Send a 'Sec-WebSocket-Extensions: grip; message-prefix=""' header to
+# the GRIP proxy by extending the WebSocketProtocol13 class.
+class WebSocketProtocolGrip(WebSocketProtocol13):
+    def _accept_connection(self):
+        self.stream.write(tornado.escape.utf8(
+                "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\n"
+                "Connection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n"
+                "Sec-WebSocket-Extensions: grip; message-prefix=\"\"\r\n"
+                "\r\n" % (self._challenge_response())))
+        super(self.__class__, self)._run_callback(self.handler.open,
+                *self.handler.open_args, **self.handler.open_kwargs)
+        super(self.__class__, self)._receive_frame()
+
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
+
+    def on_message(self, message):
+        pass
+ 
+    # Override the get method to have it use the WebSocketProtocolGrip class:
+    def get(self, *args, **kwargs):
+        self.open_args = args
+        self.open_kwargs = kwargs
+        self.stream = self.request.connection.detach()
+        self.ws_connection = WebSocketProtocolGrip(self, None)
+        self.ws_connection.accept_connection()
+
+    def open(self):
+        # Subscribe the WebSocket to a channel:
+        self.write_message('c:' + websocket_control_message(
+                'subscribe', {'channel': '<channel>'}))
+        threading.Thread(target = self.publish_message).start()
+       
+    def publish_message(self):
+        # Wait and then publish a message to the subscribed channel:
+        time.sleep(3)
+        grippub = GripPubControl({'control_uri': '<myendpoint>'})
+        grippub.publish('<channel>',
+                Item(WebSocketMessageFormat('Test WebSocket publish!!')))
+
+if __name__ == "__main__":
+    http_server = tornado.httpserver.HTTPServer(
+            tornado.web.Application(
+            [(r'/websocket', WebSocketHandler)]))
+    http_server.listen(80)
+    tornado.ioloop.IOLoop.instance().start()
 ```
 
 WebSocket over HTTP example using the WEBrick gem. In this case, a client connects to a GRIP proxy via WebSockets and the GRIP proxy communicates with the origin via HTTP.
@@ -153,7 +206,7 @@ WebSocket over HTTP example using the WEBrick gem. In this case, a client connec
 
 ```
 
-Parse a GRIP URI to extract the URI, ISS, and key values. The values will be returned in a hash containing 'control_uri', 'control_iss', and 'key' keys.
+Parse a GRIP URI to extract the URI, ISS, and key values. The values will be returned in a dictionary containing 'control_uri', 'control_iss', and 'key' keys.
 
 ```python
 from gripcontrol import parse_grip_uri
