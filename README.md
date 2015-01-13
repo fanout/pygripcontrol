@@ -246,8 +246,8 @@ class GripHandler(BaseHTTPRequestHandler):
     def publish_message(self):
         # Wait and then publish a message to the subscribed channel:
         time.sleep(3)
-        grippub = GripPubControl({'control_uri': 'http://10.0.0.20:5561'})
-        grippub.publish('test_channel',
+        grippub = GripPubControl({'control_uri': '<myendpoint>'})
+        grippub.publish('<channel>',
                 Item(WebSocketMessageFormat('Test WebSocket publish!!')))
 
 server = HTTPServer(('', 80), GripHandler)
