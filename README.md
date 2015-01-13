@@ -68,7 +68,7 @@ grippub.publish_http_stream('<channel>', 'Test async publish!',
         blocking=False, callback=callback)
 
 # Wait for all async publish calls to complete:
-grippub.finish
+grippub.finish()
 ```
 
 Validate the Grip-Sig request header from incoming GRIP messages. This ensures that the message was sent from a valid source and is not expired. Note that when using Fanout.io the key is the realm key, and when using Pushpin the key is configurable in Pushpin's settings.
@@ -83,11 +83,11 @@ Long polling example via response _headers_. The client connects to a GRIP proxy
 
 ```python
 try:
-    # Python 2.x:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
     # Python 3.x:
     from http.server import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # Python 2.x:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from gripcontrol import create_grip_channel_header, validate_sig
 
@@ -114,11 +114,11 @@ Long polling example via response _body_. The client connects to a GRIP proxy ov
 
 ```python
 try:
-    # Python 2.x:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
     # Python 3.x:
     from http.server import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # Python 2.x:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from gripcontrol import create_hold_response, validate_sig
 
@@ -204,11 +204,11 @@ WebSocket over HTTP example. In this case, a client connects to a GRIP proxy via
 
 ```python
 try:
-    # Python 2.x:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
     # Python 3.x:
     from http.server import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # Python 2.x:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import threading, time
 from pubcontrol import Item
