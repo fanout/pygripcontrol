@@ -1,16 +1,21 @@
 from datetime import datetime
 import calendar
-from urlparse import urlparse, parse_qs
-from urllib import urlencode
 from base64 import b64encode, b64decode
 from copy import deepcopy
 import json
 import jwt
 from pubcontrol import PubControl, PubControlClient, Item, Format
 
+try:
+	from urlparse import urlparse, parse_qs
+	from urllib import urlencode
+except ImportError:
+	from urllib.parse import urlparse, parse_qs
+	from urllib.parse import urlencode
+
 # returns (boolean is_text, string value)
 def _bin_or_text(s):
-	if isinstance(s, unicode):
+	if _is_unicode_instance(s):
 		return (True, s)
 	for c in s:
 		i = ord(c)
@@ -93,16 +98,21 @@ class WebSocketMessageFormat(Format):
 		out = dict()
 		val = self.content
 		if self.binary:
-			if isinstance(val, unicode):
-				val = val.encode('utf-8')
+			if _is_unicode_instance(val):
+				val = val.encode('utf-8')	
 			out['content-bin'] = b64encode(val)
 		else:
-			if not isinstance(val, unicode):
-				val = val.decode('utf-8')
+			if not _is_unicode_instance(val):
+				val = val.decode('utf-8')		
 			out['content'] = val
 		return out
 
 class GripPubControl(PubControl):
+	def __init__(self, config=None):
+		self.clients = list()
+		if config:
+			self.apply_grip_config(config)
+
 	def apply_grip_config(self, config):
 		if not isinstance(config, list):
 			config = [config]
@@ -115,13 +125,13 @@ class GripPubControl(PubControl):
 			self.add_client(client)
 
 	def publish_http_response(self, channel, http_response, id=None, prev_id=None, blocking=False, callback=None):
-		if isinstance(http_response, basestring):
+		if _is_basestring_instance(http_response):
 			http_response = HttpResponseFormat(body=http_response)
 		item = Item(http_response, id, prev_id)
 		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
 
 	def publish_http_stream(self, channel, http_stream, id=None, prev_id=None, blocking=False, callback=None):
-		if isinstance(http_stream, basestring):
+		if _is_basestring_instance(http_stream):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
 		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
@@ -160,8 +170,8 @@ def parse_grip_uri(uri):
 
 def validate_sig(token, key):
 	# jwt expects the token in utf-8
-	if isinstance(token, unicode):
-		token = token.encode('utf-8')
+	if _is_unicode_instance(token):
+		token = token.encode('utf-8')	
 
 	try:
 		claim = jwt.decode(token, key, verify_expiration=False)
@@ -180,7 +190,7 @@ def validate_sig(token, key):
 def create_grip_channel_header(channels):
 	if isinstance(channels, Channel):
 		channels = [channels]
-	elif isinstance(channels, basestring):
+	elif _is_basestring_instance(channels):
 		channels = [Channel(channels)]
 	assert(len(channels) > 0)
 
@@ -199,14 +209,14 @@ def create_hold(mode, channels, response):
 
 	if isinstance(channels, Channel):
 		channels = [channels]
-	elif isinstance(channels, basestring):
+	elif _is_basestring_instance(channels):
 		channels = [Channel(channels)]
 
 	assert(len(channels) > 0)
 
 	ichannels = list()
 	for c in channels:
-		if isinstance(c, basestring):
+		if _is_basestring_instance(c):
 			c = Channel(c)
 
 		ichannel = dict()
@@ -219,7 +229,7 @@ def create_hold(mode, channels, response):
 
 	iresponse = None
 	if response is not None:
-		if isinstance(response, basestring):
+		if _is_basestring_instance(response):
 			response = Response(body=response)
 
 		iresponse = dict()
@@ -289,3 +299,21 @@ def websocket_control_message(type, args=None):
 		out = dict()
 	out['type'] = type
 	return json.dumps(out)
+
+def _is_unicode_instance(instance):
+	try:
+		if isinstance(instance, unicode):
+			return True
+	except NameError:
+		if isinstance(instance, str):
+			return True
+	return False
+
+def _is_basestring_instance(instance):
+	try:
+		if isinstance(instance, basestring):
+			return True
+	except NameError:
+		if isinstance(instance, str):
+			return True
+	return False
