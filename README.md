@@ -141,7 +141,7 @@ except KeyboardInterrupt:
     server.server_close()
 ```
 
-WebSocket example using the Tornado 4.0.2 module. A client connects to a GRIP proxy via WebSockets and the proxy forward the request to the origin. The origin accepts the connection over a WebSocket and responds with a control message indicating that the client should be subscribed to a channel. Note that in order for the GRIP proxy to properly interpret the control messages, the origin must provide a 'grip' extension in the 'Sec-WebSocket-Extensions' header. This is accomplished by overriding the 'get' method in the handler and implementing a custom WebSocketProtocol class. Also note that a significant amount of code was removed from the 'get' and '_accept_connection' for the sake of readability and should be replaced if using this code in a real environment.
+WebSocket example using the Tornado 4.0.2 module. A client connects to a GRIP proxy via WebSockets and the proxy forward the request to the origin. The origin accepts the connection over a WebSocket and responds with a control message indicating that the client should be subscribed to a channel. Note that in order for the GRIP proxy to properly interpret the control messages, the origin must provide a 'grip' extension in the 'Sec-WebSocket-Extensions' header. This is accomplished by overriding the 'get' method in the handler and implementing a custom WebSocketProtocol class. Also note that a significant amount of code was removed from the 'get' and '_accept_connection' methods for the sake of readability and should be replaced if using this code in a real environment.
 
 ```python
 import threading, time
@@ -200,10 +200,61 @@ if __name__ == "__main__":
     tornado.ioloop.IOLoop.instance().start()
 ```
 
-WebSocket over HTTP example using the WEBrick gem. In this case, a client connects to a GRIP proxy via WebSockets and the GRIP proxy communicates with the origin via HTTP.
+WebSocket over HTTP example. In this case, a client connects to a GRIP proxy via WebSockets and the GRIP proxy communicates with the origin via HTTP.
 
 ```python
+try:
+    # Python 2.x:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # Python 3.x:
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import threading, time
+from pubcontrol import Item
+from gripcontrol import decode_websocket_events, GripPubControl
+from gripcontrol import encode_websocket_events, WebSocketEvent
+from gripcontrol import websocket_control_message, validate_sig
+from gripcontrol import WebSocketMessageFormat
+
+class GripHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        # Validate the Grip-Sig header:
+        if validate_sig(self.headers.get('Grip-Sig'), '<key>') is False:
+            return
+
+        # Set the headers required by the GRIP proxy:
+        self.send_response(200)
+        self.send_header('Sec-WebSocket-Extensions',
+                'grip; message-prefix=""')
+        self.send_header('Content-Type', 'application/websocket-events')
+        self.end_headers()
+
+        request_body = self.rfile.read(int(self.headers.get('Content-Length')))
+        in_events = decode_websocket_events(request_body.decode('utf-8'))
+        if in_events[0].type == 'OPEN':
+            # Open the WebSocket and subscribe it to a channel:
+            out_events = []
+            out_events.append(WebSocketEvent('OPEN'))
+            out_events.append(WebSocketEvent('TEXT', 'c:' +
+                    websocket_control_message('subscribe',
+                    {'channel': '<channel>'})))
+            self.wfile.write(encode_websocket_events(
+                    out_events).encode('utf-8'))
+            threading.Thread(target = self.publish_message).start()
+
+    def publish_message(self):
+        # Wait and then publish a message to the subscribed channel:
+        time.sleep(3)
+        grippub = GripPubControl({'control_uri': 'http://10.0.0.20:5561'})
+        grippub.publish('test_channel',
+                Item(WebSocketMessageFormat('Test WebSocket publish!!')))
+
+server = HTTPServer(('', 80), GripHandler)
+try:
+    server.serve_forever()
+except KeyboardInterrupt:
+    server.server_close()
 ```
 
 Parse a GRIP URI to extract the URI, ISS, and key values. The values will be returned in a dictionary containing 'control_uri', 'control_iss', and 'key' keys.
