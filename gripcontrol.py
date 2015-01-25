@@ -202,7 +202,7 @@ def create_grip_channel_header(channels):
 		parts.append(s)
 	return ', '.join(parts)
 
-def create_hold(mode, channels, response):
+def create_hold(mode, channels, response, timeout=None):
 	hold = dict()
 
 	hold['mode'] = mode
@@ -226,6 +226,9 @@ def create_hold(mode, channels, response):
 		ichannels.append(ichannel)
 
 	hold['channels'] = ichannels
+
+	if timeout:
+		hold['timeout'] = timeout
 
 	iresponse = None
 	if response is not None:
@@ -253,8 +256,8 @@ def create_hold(mode, channels, response):
 
 	return json.dumps(instruct)
 
-def create_hold_response(channels, response=None):
-	return create_hold('response', channels, response)
+def create_hold_response(channels, response=None, timeout=None):
+	return create_hold('response', channels, response, timeout)
 
 def create_hold_stream(channels, response=None):
 	return create_hold('stream', channels, response)
