@@ -55,7 +55,7 @@ grippub.remove_all_clients()
 
 # Explicitly add an endpoint as a PubControlClient instance:
 pubclient = PubControlClient('<myendpoint_uri>')
-# Optionally set JWT auth: pubclient.set_auth_jwt('<claim>', '<key>')
+# Optionally set JWT auth: pubclient.set_auth_jwt(<claim>, '<key>')
 # Optionally set basic auth: pubclient.set_auth_basic('<user>', '<password>')
 grippub.add_client(pubclient)
 
@@ -101,6 +101,8 @@ class GripHandler(BaseHTTPRequestHandler):
         self.send_header('Grip-Hold', 'response')
         self.send_header('Grip-Channel',
                 create_grip_channel_header('<channel>'))
+        # To optionally set a timeout value in seconds:
+        # self.send_header('Grip-Timeout', <timeout_value>)
         self.end_headers()
 
 server = HTTPServer(('', 80), GripHandler)
@@ -133,7 +135,9 @@ class GripHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/grip-instruct')
         self.end_headers()
         self.wfile.write(create_hold_response('<channel>').encode('utf-8'))
-
+        # Or to optionally set a timeout value in seconds:
+        # self.wfile.write(create_hold_response(
+        #         '<channel>', timeout=<timeout_value>).encode('utf-8'))
 server = HTTPServer(('', 80), GripHandler)
 try:
     server.serve_forever()
