@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
 name="gripcontrol",
-version="2.2.1",
+version="2.3.1",
 description="GRIP library",
 author="Justin Karneges",
 author_email="justin@affinix.com",
