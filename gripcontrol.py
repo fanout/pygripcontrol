@@ -17,11 +17,10 @@ except ImportError:
 def _bin_or_text(s):
 	if _is_unicode_instance(s):
 		return (True, s)
-	for c in s:
-		i = ord(c)
-		if i < 0x20 or i >= 0x7f:
-			return (False, s)
-	return (True, s.decode('utf-8'))
+	try:
+		return (True, s.decode('utf-8'))
+	except UnicodeDecodeError:
+		return (False, s)
 
 def _timestamp_utcnow():
 	return calendar.timegm(datetime.utcnow().utctimetuple())
