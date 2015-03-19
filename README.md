@@ -235,7 +235,7 @@ class GripHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         request_body = self.rfile.read(int(self.headers.get('Content-Length')))
-        in_events = decode_websocket_events(request_body.decode('utf-8'))
+        in_events = decode_websocket_events(request_body)
         if in_events[0].type == 'OPEN':
             # Open the WebSocket and subscribe it to a channel:
             out_events = []
