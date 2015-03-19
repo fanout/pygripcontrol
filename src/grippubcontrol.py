@@ -55,7 +55,7 @@ class GripPubControl(PubControl):
 		if _is_basestring_instance(http_response):
 			http_response = HttpResponseFormat(body=http_response)
 		item = Item(http_response, id, prev_id)
-		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
+		self.publish(channel, item, blocking=blocking, callback=callback)
 
 	# Publish an HTTP stream format message to all of the configured
 	# PubControlClients with a specified channel, message, and optional
@@ -71,4 +71,4 @@ class GripPubControl(PubControl):
 		if _is_basestring_instance(http_stream):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
-		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
+		self.publish(channel, item, blocking=blocking, callback=callback)
