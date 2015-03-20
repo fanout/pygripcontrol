@@ -13,7 +13,8 @@ from src.gripcontrol import WebSocketEvent, Channel, Response, \
 		parse_grip_uri, create_hold, validate_sig, create_grip_channel_header, \
 		create_hold_response, create_hold_stream, decode_websocket_events, \
 		encode_websocket_events, websocket_control_message, _parse_channels, \
-		_get_hold_channels, _get_hold_response
+		_get_hold_channels, _get_hold_response, _is_unicode_instance, \
+		_is_basestring_instance, _bin_or_text, _timestamp_utcnow
 
 class TestGripControl(unittest.TestCase):	 
 	def test_create_hold(self):
@@ -228,16 +229,21 @@ class TestGripControl(unittest.TestCase):
 		self.assertEqual('headers' in response, False)
 
 	def test_is_unicode_instance(self):
-		pass
+		self.assertTrue(_is_unicode_instance(u'hello'))
+		self.assertFalse(_is_unicode_instance('hello'.encode('ascii')))
 
 	def test_is_basestring_instance(self):
-		pass
+		self.assertTrue(_is_basestring_instance(u'hello'))
+		self.assertTrue(_is_basestring_instance('hello'))
 
 	def test_bin_or_text(self):
-		pass
+		self.assertEqual(_bin_or_text('hello'), (True, 'hello'))
+		self.assertEqual(_bin_or_text(pack('hhh', 253, 254, 255)),
+				(False, pack('hhh', 253, 254, 255)))
 
 	def test_timestamp_utcnow(self):
-		pass
+		self.assertEqual(_timestamp_utcnow(), 
+				calendar.timegm(datetime.utcnow().utctimetuple()))
 
 if __name__ == '__main__':
 		unittest.main()
