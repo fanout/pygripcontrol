@@ -22,7 +22,8 @@ class TestWebSocketMessageFormat(unittest.TestCase):
 		format = WebSocketMessageFormat('content')
 		self.assertEqual(format.export(), {'content': 'content'})
 		format = WebSocketMessageFormat('content', True)
-		self.assertEqual(format.export(), {'content-bin': b64encode('content')})
+		self.assertEqual(format.export(), {'content-bin': b64encode(
+                'content'.encode('ascii'))})
 
 if __name__ == '__main__':
 		unittest.main()

@@ -30,141 +30,11 @@ except ImportError:
 	from urllib.parse import urlparse, parse_qs
 	from urllib.parse import urlencode
 
-<<<<<<< HEAD:src/gripcontrol.py
 # Parse the specified GRIP URI into a config object that can then be passed
 # to the GripPubControl class. The URI can include 'iss' and 'key' JWT
 # authentication query parameters as well as any other required query string
 # parameters. The JWT 'key' query parameter can be provided as-is or in base64
 # encoded format.
-=======
-# returns (boolean is_text, string value)
-def _bin_or_text(s):
-	if _is_unicode_instance(s):
-		return (True, s)
-	try:
-		return (True, s.decode('utf-8'))
-	except UnicodeDecodeError:
-		return (False, s)
-
-def _timestamp_utcnow():
-	return calendar.timegm(datetime.utcnow().utctimetuple())
-
-class Channel(object):
-	def __init__(self, name, prev_id=None):
-		self.name = name
-		self.prev_id = prev_id
-
-class Response(object):
-	def __init__(self, code=None, reason=None, headers=None, body=None):
-		self.code = code
-		self.reason = reason
-		self.headers = headers
-		self.body = body
-
-class HttpResponseFormat(Format):
-	def __init__(self, code=None, reason=None, headers=None, body=None):
-		self.code = code
-		self.reason = reason
-		self.headers = headers
-		self.body = body
-
-	def name(self):
-		return 'http-response'
-
-	def export(self):
-		out = dict()
-		if self.code is not None:
-			out['code'] = self.code
-		if self.reason:
-			out['reason'] = self.reason
-		if self.headers:
-			out['headers'] = self.headers
-		if self.body:
-			is_text, val = _bin_or_text(self.body)
-			if is_text:
-				out['body'] = val
-			else:
-				out['body-bin'] = b64encode(val)
-		return out
-
-class HttpStreamFormat(Format):
-	def __init__(self, content=None, close=False):
-		self.content = content
-		self.close = close
-		if not self.close and self.content is None:
-			raise ValueError('content not set')
-
-	def name(self):
-		return 'http-stream'
-
-	def export(self):
-		out = dict()
-		if self.close:
-			out['action'] = 'close'
-		else:
-			is_text, val = _bin_or_text(self.content)
-			if is_text:
-				out['content'] = val
-			else:
-				out['content-bin'] = b64encode(val)
-		return out
-
-class WebSocketMessageFormat(Format):
-	def __init__(self, content, binary=False):
-		self.content = content
-		self.binary = binary
-
-	def name(self):
-		return 'ws-message'
-
-	def export(self):
-		out = dict()
-		val = self.content
-		if self.binary:
-			if _is_unicode_instance(val):
-				val = val.encode('utf-8')	
-			out['content-bin'] = b64encode(val)
-		else:
-			if not _is_unicode_instance(val):
-				val = val.decode('utf-8')		
-			out['content'] = val
-		return out
-
-class GripPubControl(PubControl):
-	def __init__(self, config=None):
-		self.clients = list()
-		if config:
-			self.apply_grip_config(config)
-
-	def apply_grip_config(self, config):
-		if not isinstance(config, list):
-			config = [config]
-		for entry in config:
-			if 'control_uri' not in entry:
-				continue
-			client = PubControlClient(entry['control_uri'])
-			if 'control_iss' in entry:
-				client.set_auth_jwt({'iss': entry['control_iss']}, entry['key'])
-			self.add_client(client)
-
-	def publish_http_response(self, channel, http_response, id=None, prev_id=None, blocking=False, callback=None):
-		if _is_basestring_instance(http_response):
-			http_response = HttpResponseFormat(body=http_response)
-		item = Item(http_response, id, prev_id)
-		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
-
-	def publish_http_stream(self, channel, http_stream, id=None, prev_id=None, blocking=False, callback=None):
-		if _is_basestring_instance(http_stream):
-			http_stream = HttpStreamFormat(http_stream)
-		item = Item(http_stream, id, prev_id)
-		super(GripPubControl, self).publish(channel, item, blocking=blocking, callback=callback)
-
-class WebSocketEvent(object):
-	def __init__(self, type, content=None):
-		self.type = type
-		self.content = content
-
->>>>>>> origin/develop:gripcontrol.py
 def parse_grip_uri(uri):
 	parsed = urlparse(uri)
 	params = parse_qs(parsed.query)
@@ -344,7 +214,7 @@ def _get_hold_channels(channels):
 def _get_hold_response(response): 
 	iresponse = None
 	if response is not None:
-		if _is_basestring_instance(response):
+		if _is_basestring_instance(response) or isinstance(response, bytes):
 			response = Response(body=response)
 		iresponse = dict()
 		if response.code is not None:
@@ -358,7 +228,7 @@ def _get_hold_response(response):
 			if is_text:
 				iresponse['body'] = val
 			else:
-				iresponse['body-bin'] = b64encode(val)
+				iresponse['body-bin'] = b64encode(val).decode('utf-8')
 	return iresponse
 
 # An internal method used for determining whether the specified instance
@@ -388,7 +258,7 @@ def _is_basestring_instance(instance):
 def _bin_or_text(s):
 	if _is_unicode_instance(s):
 		return (True, s)
-    try:
+	try:
 		return (True, s.decode('utf-8'))
 	except UnicodeDecodeError:
 		return (False, s)
