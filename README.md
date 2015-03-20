@@ -1,6 +1,6 @@
 PyGripControl
 =============
-Author: Justin Karneges <justin@fanout.io>
+Author: Justin Karneges <justin@fanout.io>, Konstantin Bokarius <kon@fanout.io>
 
 GRIP library for Python.
 
