@@ -14,7 +14,7 @@ from .gripcontrol import _is_basestring_instance, _bin_or_text
 class HttpResponseFormat(Format):
 
 	# Initialize with the message code, reason, headers, and body to send
-	# to the client when the message is publishing.
+	# to the client when the message is published.
 	def __init__(self, code=None, reason=None, headers=None, body=None):
 		self.code = code
 		self.reason = reason
