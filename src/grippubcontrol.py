@@ -5,7 +5,7 @@
 #    :copyright: (c) 2015 by Fanout, Inc.
 #    :license: MIT, see LICENSE for more details.
 
-from pubcontrol import PubControl, PubControlClient, Item
+from pubcontrol import PubControl, PubControlClient, ZmqPubControlClient, Item
 from .httpresponseformat import HttpResponseFormat
 from .httpstreamformat import HttpStreamFormat
 from .gripcontrol import _is_basestring_instance
@@ -19,8 +19,14 @@ from .gripcontrol import _is_basestring_instance
 class GripPubControl(PubControl):
 
 	# Initialize with or without a configuration. A configuration can be applied
-	# after initialization via the apply_grip_config method.
-	def __init__(self, config=None):
+	# after initialization via the apply_grip_config method. Optionally specify
+	# a subscription callback method that will be executed whenever a channel is 
+	# subscribed to or unsubscribed from. The callback accepts two parameters:
+	# the first parameter a string containing 'sub' or 'unsub' and the second
+	# parameter containing the channel name. Optionally specify a ZMQ context
+	# to use otherwise the global ZMQ context will be used.
+	def __init__(self, config=None, sub_callback=None, zmq_context=None):
+		super(GripPubControl, self).__init__(None, sub_callback, zmq_context)
 		self.clients = list()
 		if config:
 			self.apply_grip_config(config)
@@ -34,12 +40,19 @@ class GripPubControl(PubControl):
 		if not isinstance(config, list):
 			config = [config]
 		for entry in config:
-			if 'control_uri' not in entry:
-				continue
-			client = PubControlClient(entry['control_uri'])
-			if 'control_iss' in entry:
-				client.set_auth_jwt({'iss': entry['control_iss']}, entry['key'])
-			self.add_client(client)
+			if 'control_uri' in entry:
+				client = PubControlClient(entry['control_uri'])
+				if 'control_iss' in entry:
+					client.set_auth_jwt({'iss': entry['control_iss']}, entry['key'])
+				self.add_client(client)
+			elif 'control_zmq_uri' in entry:
+				require_subscribers = False
+				if 'require_subscribers' in entry:
+					require_subscribers = entry['require_subscribers']
+				client = ZmqPubControlClient(entry['control_zmq_uri'],
+						None, None, require_subscribers, True, None, self._zmq_ctx,
+						self._discovery_callback)
+				self.add_client(client)
 
 	# Publish an HTTP response format message to all of the configured
 	# PubControlClients with a specified channel, message, and optional

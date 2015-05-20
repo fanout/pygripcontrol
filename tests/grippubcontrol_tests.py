@@ -2,6 +2,7 @@ import sys
 import unittest
 from base64 import b64encode
 from pubcontrol import Item
+import zmq
 
 sys.path.append('../')
 from src.grippubcontrol import GripPubControl
@@ -29,6 +30,7 @@ class TestGripPubControl(unittest.TestCase):
 	def test_initialize(self):
 		pc = GripPubControl()
 		self.assertEqual(len(pc.clients), 0)
+		self.assertEqual(pc._zmq_ctx, zmq.Context.instance())
 		config = {'control_uri': 'uri', 'control_iss': 'iss', 'key': 'key'}
 		pc = GripPubControl(config)
 		self.assertEqual(len(pc.clients), 1)
@@ -36,6 +38,9 @@ class TestGripPubControl(unittest.TestCase):
 				{'control_uri': 'uri', 'control_iss': 'iss', 'key': 'key'}]
 		pc = GripPubControl(config)
 		self.assertEqual(len(pc.clients), 2)
+		pc = GripPubControl(None, 'callback', 'zmqctx')
+		self.assertEqual(pc._sub_callback, 'callback')
+		self.assertEqual(pc._zmq_ctx, 'zmqctx')
 
 	def test_apply_grip_config(self):
 		pc = GripPubControl()
@@ -45,7 +50,9 @@ class TestGripPubControl(unittest.TestCase):
 		pc = GripPubControl()
 		config = [{'control_uri': 'uri'},
 				{'control_uri': 'uri1', 'control_iss': 'iss1', 'key': 'key1'},
-				{'control_uri': 'uri2', 'control_iss': 'iss2', 'key': 'key2'}]
+				{'control_uri': 'uri2', 'control_iss': 'iss2', 'key': 'key2'},
+				{'control_zmq_uri': 'zmq_uri'},
+				{'control_zmq_uri': 'zmq_uri2', 'require_subscribers': True}]
 		pc.apply_grip_config(config)
 		self.assertEqual(pc.clients[0].uri, 'uri')
 		self.assertEqual(pc.clients[0].auth_jwt_claim, None)
@@ -58,6 +65,10 @@ class TestGripPubControl(unittest.TestCase):
 		self.assertEqual(pc.clients[2].auth_jwt_claim,
 				{'iss': 'iss2'})
 		self.assertEqual(pc.clients[2].auth_jwt_key, 'key2')
+		self.assertEqual(pc.clients[3].uri, 'zmq_uri')
+		self.assertEqual(pc.clients[3]._require_subscribers, False)
+		self.assertEqual(pc.clients[4].uri, 'zmq_uri2')
+		self.assertEqual(pc.clients[4]._require_subscribers, True)
 
 	def test_publish_http_response_string(self):
 		pc = GripPubControlTestClass()
