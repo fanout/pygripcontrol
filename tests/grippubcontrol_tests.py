@@ -69,6 +69,9 @@ class TestGripPubControl(unittest.TestCase):
 		self.assertEqual(pc.clients[3]._require_subscribers, False)
 		self.assertEqual(pc.clients[4].uri, 'zmq_uri2')
 		self.assertEqual(pc.clients[4]._require_subscribers, True)
+		self.assertEqual(pc.clients[4]._discovery_callback, pc._discovery_callback)
+		self.assertEqual(pc.clients[4]._disable_pub, True)
+		self.assertEqual(pc.clients[4]._context, pc._zmq_ctx)
 
 	def test_publish_http_response_string(self):
 		pc = GripPubControlTestClass()

@@ -50,8 +50,9 @@ class GripPubControl(PubControl):
 				if 'require_subscribers' in entry:
 					require_subscribers = entry['require_subscribers']
 				client = ZmqPubControlClient(entry['control_zmq_uri'],
-						None, None, require_subscribers, True, None, self._zmq_ctx,
-						self._discovery_callback)
+						require_subscribers=require_subscribers,
+						disable_pub=True, context=self._zmq_ctx,
+						discovery_callback=self._discovery_callback)
 				self.add_client(client)
 
 	# Publish an HTTP response format message to all of the configured
