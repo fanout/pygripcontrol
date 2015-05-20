@@ -24,7 +24,7 @@ Or from this repository:
 Sample Usage
 ------------
 
-Examples for how to publish HTTP response and HTTP stream messages to GRIP proxy endpoints via the GripPubControl class.
+Examples for how to publish HTTP response and HTTP stream messages to GRIP proxy endpoints via the GripPubControl class. Note that the GripPubControl class also supports publishing to ZMQ PUSH and XPUB sockets.
 
 ```python
 from base64 import b64decode
@@ -49,6 +49,11 @@ grippub = GripPubControl({
 # Add new endpoints by applying an endpoint configuration:
 grippub.apply_grip_config([{'control_uri': '<myendpoint_uri_1>'}, 
         {'control_uri': '<myendpoint_uri_2>'}])
+
+# Add a ZMQ command URI endpoint for automatic PUSH/XPUB socket discovery
+# and indicate that the XPUB socket should be used via require_subscribers:
+grippub.apply_grip_config({'zmq_uri': 'tcp://localhost:5563',
+        'require_subscribers': True})
 
 # Remove all configured endpoints:
 grippub.remove_all_clients()
