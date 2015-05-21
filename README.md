@@ -56,7 +56,8 @@ grippub.apply_grip_config([{'control_uri': '<myendpoint_uri_1>'},
         {'control_uri': '<myendpoint_uri_2>'}])
 
 # Add a ZMQ command URI endpoint for automatic PUSH/XPUB socket discovery
-# and indicate that the XPUB socket should be used via require_subscribers:
+# and indicate that the XPUB socket should be used via require_subscribers.
+# NOTE: the pyzmq and tnetstring packages must be installed for ZMQ publishing.
 grippub.apply_grip_config({'control_zmq_uri': 'tcp://localhost:5563',
         'require_subscribers': True})
 
