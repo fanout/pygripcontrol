@@ -10,6 +10,11 @@ Requirements
 * jwt
 * pubcontrol
 
+For ZMQ publishing:
+
+* pyzmq
+* tnetstring
+
 Install
 -------
 
