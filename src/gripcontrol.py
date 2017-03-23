@@ -19,6 +19,7 @@ from base64 import b64encode, b64decode
 from copy import deepcopy
 import json
 import jwt
+import sys
 from .channel import Channel
 from .response import Response
 from .websocketevent import WebSocketEvent
@@ -144,17 +145,15 @@ def decode_websocket_events(body):
 			raise ValueError('bad format')
 		typeline = body[start:at]
 		start = at + 2
-
 		at = typeline.find(' ')
 		if at != -1:
 			etype = typeline[:at]
-			clen = int('0x' + typeline[at + 1:], 16)
-			content = body[start:start + clen]
-			start += clen + 2
+			offset = body.find('\r\n', start)
+			content = body[start:offset]
+			start = offset + 2
 			e = WebSocketEvent(etype, content)
 		else:
 			e = WebSocketEvent(typeline)
-
 		out.append(e)
 
 	return out
@@ -166,7 +165,11 @@ def encode_websocket_events(events):
 	out = ''
 	for e in events:
 		if e.content is not None:
-			out += '%s %x\r\n%s\r\n' % (e.type, len(e.content), e.content)
+			if sys.version_info[0] >= 3:
+				content = e.content.encode('utf-8')
+			else:
+				content = e.content
+			out += '%s %x\r\n%s\r\n' % (e.type, len(content), e.content)
 		else:
 			out += '%s\r\n' % e.type
 	return out
