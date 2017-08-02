@@ -86,3 +86,35 @@ class GripPubControl(PubControl):
 			http_stream = HttpStreamFormat(http_stream)
 		item = Item(http_stream, id, prev_id)
 		self.publish(channel, item, blocking=blocking, callback=callback)
+
+	# Update the origin server settings for the GRIP proxy. To set a non-SSL
+	# target, set 'host' and 'port'. To set an SSL target, set 'ssl_host' and
+	# 'ssl_port'. For a target to be accepted, both its host and port must be
+	# specified in this call. For services that support more than one input
+	# routing domain, 'route_domain' can be used to select the domain to
+	# apply the changes to. The call will be made against all configured
+	# PubControlClients. If any of the lower level calls fail, this method
+	# will raise an exception.
+	def set_origin(self, route_domain=None, host=None, port=None, ssl_host=None, ssl_port=None, rewrite_host=True, over_http=True):
+		params = {}
+		if host is not None:
+			params['host'] = host
+		if port is not None:
+			params['port'] = str(port)
+		if ssl_host is not None:
+			params['ssl_host'] = ssl_host
+		if ssl_port is not None:
+			params['ssl_port'] = str(ssl_port)
+		if rewrite_host is not None:
+			params['rewrite_host'] = 'true' if rewrite_host else 'false'
+		if over_http is not None:
+			params['over_http'] = 'true' if over_http else 'false'
+
+		if not route_domain:
+			route_domain = 'default'
+
+		ret = self.http_call('/http/%s/' % route_domain, params)
+		for client, result in ret.iteritems():
+			if len(result) == 1:
+				e = result[0]
+				raise ValueError('failed to set origin for service %s: %s' % (client.uri, e.message))
