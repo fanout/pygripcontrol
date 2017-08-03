@@ -13,6 +13,7 @@
 # features such as encoding/decoding web socket events and generating
 # control messages.
 
+import sys
 from datetime import datetime
 import calendar
 from base64 import b64encode, b64decode
@@ -22,6 +23,8 @@ import jwt
 from .channel import Channel
 from .response import Response
 from .websocketevent import WebSocketEvent
+
+is_python3 = sys.version_info >= (3,)
 
 try:
 	from urlparse import urlparse, parse_qs
@@ -71,7 +74,7 @@ def validate_sig(token, key):
 		token = token.encode('utf-8')	
 
 	try:
-		claim = jwt.decode(token, key, verify_expiration=False)
+		claim = jwt.decode(token, key)
 	except:
 		return False
 
@@ -136,24 +139,46 @@ def create_hold_stream(channels, response=None):
 # instances when using the WebSocket-over-HTTP protocol. A RuntimeError
 # is raised if the format is invalid.
 def decode_websocket_events(body):
+	if is_python3:
+		if not isinstance(body, bytes):
+			raise ValueError('body must be bytes')
+
 	out = list()
 	start = 0
 	while start < len(body):
-		at = body.find('\r\n', start)
-		if at == -1:
-			raise ValueError('bad format')
-		typeline = body[start:at]
-		start = at + 2
+		if is_python3:
+			at = body.find(b'\r\n', start)
+			if at == -1:
+				raise ValueError('bad format')
+			typeline = body[start:at]
+			start = at + 2
 
-		at = typeline.find(' ')
-		if at != -1:
-			etype = typeline[:at]
-			clen = int('0x' + typeline[at + 1:], 16)
-			content = body[start:start + clen]
-			start += clen + 2
-			e = WebSocketEvent(etype, content)
+			at = typeline.find(b' ')
+			if at != -1:
+				etype = typeline[:at].decode('utf-8')
+				clen = int(b'0x' + typeline[at + 1:], 16)
+				content = body[start:start + clen]
+				start += clen + 2
+				e = WebSocketEvent(etype, content)
+			else:
+				etype = typeline.decode('utf-8')
+				e = WebSocketEvent(etype)
 		else:
-			e = WebSocketEvent(typeline)
+			at = body.find('\r\n', start)
+			if at == -1:
+				raise ValueError('bad format')
+			typeline = body[start:at]
+			start = at + 2
+
+			at = typeline.find(' ')
+			if at != -1:
+				etype = typeline[:at]
+				clen = int('0x' + typeline[at + 1:], 16)
+				content = body[start:start + clen]
+				start += clen + 2
+				e = WebSocketEvent(etype, content)
+			else:
+				e = WebSocketEvent(typeline)
 
 		out.append(e)
 
@@ -163,13 +188,36 @@ def decode_websocket_events(body):
 # value should then be passed to a GRIP proxy in the body of an HTTP response
 # when using the WebSocket-over-HTTP protocol.
 def encode_websocket_events(events):
-	out = ''
-	for e in events:
-		if e.content is not None:
-			out += '%s %x\r\n%s\r\n' % (e.type, len(e.content), e.content)
-		else:
-			out += '%s\r\n' % e.type
-	return out
+	if is_python3:
+		out = b''
+		for e in events:
+			if isinstance(e.type, str):
+				etype = e.type.encode('utf-8')
+			else:
+				etype = e.type
+			content = e.content
+			if content is not None:
+				if isinstance(content, str):
+					content = content.encode('utf-8')
+				else:
+					content = content
+			out += etype
+			if content is not None:
+				size_str = ' %x' % len(content)
+				out += size_str.encode('utf-8')
+			out += b'\r\n'
+			if content is not None:
+				out += content
+				out += b'\r\n'
+		return out
+	else:
+		out = ''
+		for e in events:
+			if e.content is not None:
+				out += '%s %x\r\n%s\r\n' % (e.type, len(e.content), e.content)
+			else:
+				out += '%s\r\n' % e.type
+		return out
 
 # Generate a WebSocket control message with the specified type and optional
 # arguments. WebSocket control messages are passed to GRIP proxies and

@@ -8,6 +8,8 @@ from struct import pack
 from base64 import b64encode, b64decode
 from pubcontrol import Item
 
+is_python3 = sys.version_info >= (3,)
+
 sys.path.append('../')
 from src.gripcontrol import WebSocketEvent, Channel, Response, \
 		parse_grip_uri, create_hold, validate_sig, create_grip_channel_header, \
@@ -125,29 +127,48 @@ class TestGripControl(unittest.TestCase):
 		self.assertEqual(hold['hold']['mode'], 'stream')
 
 	def test_decode_websocket_events(self):
-		events = decode_websocket_events("OPEN\r\nTEXT 5\r\nHello" + 
-				"\r\nTEXT 0\r\n\r\nCLOSE\r\nTEXT\r\nCLOSE\r\n")
+		if is_python3:
+			events = decode_websocket_events(b"OPEN\r\nTEXT 5\r\nHello" + 
+					b"\r\nTEXT 0\r\n\r\nCLOSE\r\nTEXT\r\nCLOSE\r\n")
+		else:
+			events = decode_websocket_events("OPEN\r\nTEXT 5\r\nHello" + 
+					"\r\nTEXT 0\r\n\r\nCLOSE\r\nTEXT\r\nCLOSE\r\n")
 		self.assertEqual(len(events), 6)
 		self.assertEqual(events[0].type, 'OPEN')
 		self.assertEqual(events[0].content, None)
 		self.assertEqual(events[1].type, 'TEXT')
-		self.assertEqual(events[1].content, 'Hello')
+		if is_python3:
+			self.assertEqual(events[1].content, b'Hello')
+		else:
+			self.assertEqual(events[1].content, 'Hello')
 		self.assertEqual(events[2].type, 'TEXT')
-		self.assertEqual(events[2].content, '')
+		if is_python3:
+			self.assertEqual(events[2].content, b'')
+		else:
+			self.assertEqual(events[2].content, '')
 		self.assertEqual(events[3].type, 'CLOSE')
 		self.assertEqual(events[3].content, None)
 		self.assertEqual(events[4].type, 'TEXT')
 		self.assertEqual(events[4].content, None)
 		self.assertEqual(events[5].type, 'CLOSE')
 		self.assertEqual(events[5].content, None)
-		events = decode_websocket_events("OPEN\r\n")
+		if is_python3:
+			events = decode_websocket_events(b"OPEN\r\n")
+		else:
+			events = decode_websocket_events("OPEN\r\n")
 		self.assertEqual(len(events), 1)
 		self.assertEqual(events[0].type, 'OPEN')
 		self.assertEqual(events[0].content, None)
-		events = decode_websocket_events("TEXT 5\r\nHello\r\n")
+		if is_python3:
+			events = decode_websocket_events(b"TEXT 5\r\nHello\r\n")
+		else:
+			events = decode_websocket_events("TEXT 5\r\nHello\r\n")
 		self.assertEqual(len(events), 1)
 		self.assertEqual(events[0].type, 'TEXT')
-		self.assertEqual(events[0].content, 'Hello')
+		if is_python3:
+			self.assertEqual(events[0].content, b'Hello')
+		else:
+			self.assertEqual(events[0].content, 'Hello')
 		with self.assertRaises(ValueError):
 			decode_websocket_events("TEXT 5")
 		with self.assertRaises(ValueError):
@@ -158,9 +179,15 @@ class TestGripControl(unittest.TestCase):
 				WebSocketEvent("TEXT", "Hello"), 
 				WebSocketEvent("TEXT", ""),
 				WebSocketEvent("TEXT", None)])
-		self.assertEqual(events, "TEXT 5\r\nHello\r\nTEXT 0\r\n\r\nTEXT\r\n")
+		if is_python3:
+			self.assertEqual(events, b"TEXT 5\r\nHello\r\nTEXT 0\r\n\r\nTEXT\r\n")
+		else:
+			self.assertEqual(events, "TEXT 5\r\nHello\r\nTEXT 0\r\n\r\nTEXT\r\n")
 		events = encode_websocket_events([WebSocketEvent("OPEN")])
-		self.assertEqual(events, "OPEN\r\n")
+		if is_python3:
+			self.assertEqual(events, b"OPEN\r\n")
+		else:
+			self.assertEqual(events, "OPEN\r\n")
 
 	def test_websocket_control_message(self):
 		message = websocket_control_message('type')
