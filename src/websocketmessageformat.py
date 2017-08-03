@@ -30,10 +30,10 @@ class WebSocketMessageFormat(Format):
 		val = self.content
 		if self.binary:
 			if _is_unicode_instance(val):
-				val = val.encode('utf-8')	
+				val = val.encode('utf-8')
 			out['content-bin'] = b64encode(val)
 		else:
 			if not _is_unicode_instance(val):
-				val = val.decode('utf-8')		
+				val = val.decode('utf-8')
 			out['content'] = val
 		return out
