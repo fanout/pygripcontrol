@@ -40,20 +40,18 @@ class GripPubControl(PubControl):
 		if not isinstance(config, list):
 			config = [config]
 		for entry in config:
+			pc_config = {}
 			if 'control_uri' in entry:
-				client = PubControlClient(entry['control_uri'])
+				pc_config['uri'] = entry['control_uri']
 				if 'control_iss' in entry:
-					client.set_auth_jwt({'iss': entry['control_iss']}, entry['key'])
-				self.add_client(client)
+					pc_config['iss'] = entry['control_iss']
+				if 'key' in entry:
+					pc_config['key'] = entry['key']
 			elif 'control_zmq_uri' in entry:
-				require_subscribers = False
-				if 'require_subscribers' in entry:
-					require_subscribers = entry['require_subscribers']
-				client = ZmqPubControlClient(entry['control_zmq_uri'],
-						require_subscribers=require_subscribers,
-						disable_pub=True, context=self._zmq_ctx,
-						discovery_callback=self._discovery_callback)
-				self.add_client(client)
+				pc_config['zmq_uri'] = entry['control_zmq_uri']
+			if entry.get('require_subscribers'):
+				pc_config['require_subscribers'] = True
+			self.apply_config(pc_config)
 
 	# Publish an HTTP response format message to all of the configured
 	# PubControlClients with a specified channel, message, and optional
