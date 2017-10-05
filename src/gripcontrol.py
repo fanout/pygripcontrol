@@ -23,15 +23,11 @@ import jwt
 from .channel import Channel
 from .response import Response
 from .websocketevent import WebSocketEvent
+from six.moves.urllib_parse import urlparse, parse_qs, urlencode
+
 
 is_python3 = sys.version_info >= (3,)
 
-try:
-	from urlparse import urlparse, parse_qs
-	from urllib import urlencode
-except ImportError:
-	from urllib.parse import urlparse, parse_qs
-	from urllib.parse import urlencode
 
 # Parse the specified GRIP URI into a config object that can then be passed
 # to the GripPubControl class. The URI can include 'iss' and 'key' JWT

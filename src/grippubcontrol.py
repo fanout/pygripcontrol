@@ -9,6 +9,7 @@ from pubcontrol import PubControl, PubControlClient, ZmqPubControlClient, Item
 from .httpresponseformat import HttpResponseFormat
 from .httpstreamformat import HttpStreamFormat
 from .gripcontrol import _is_basestring_instance
+import six
 
 # The GripPubControl class allows consumers to easily publish HTTP response
 # and HTTP stream format messages to GRIP proxies. Configuring GripPubControl
@@ -112,7 +113,7 @@ class GripPubControl(PubControl):
 			route_domain = 'default'
 
 		ret = self.http_call('/http/%s/' % route_domain, params)
-		for client, result in ret.iteritems():
+		for client, result in six.iteritems(ret):
 			if len(result) == 1:
 				e = result[0]
 				raise ValueError('failed to set origin for service %s: %s' % (client.uri, e.message))
