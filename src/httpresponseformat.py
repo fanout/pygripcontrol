@@ -15,11 +15,12 @@ class HttpResponseFormat(Format):
 
 	# Initialize with the message code, reason, headers, and body to send
 	# to the client when the message is published.
-	def __init__(self, code=None, reason=None, headers=None, body=None):
+	def __init__(self, code=None, reason=None, headers=None, body=None, content_filters=None):
 		self.code = code
 		self.reason = reason
 		self.headers = headers
 		self.body = body
+		self.content_filters = content_filters
 
 	# The name used when publishing this format.
 	def name(self):
@@ -30,6 +31,8 @@ class HttpResponseFormat(Format):
 	# binary.
 	def export(self):
 		out = dict()
+		if self.content_filters is not None:
+			out['content-filters'] = self.content_filters
 		if self.code is not None:
 			out['code'] = self.code
 		if self.reason:

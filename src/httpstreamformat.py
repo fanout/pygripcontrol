@@ -16,9 +16,10 @@ class HttpStreamFormat(Format):
 	# Initialize with either the message content or a boolean indicating that
 	# the streaming connection should be closed. If neither the content nor
 	# the boolean flag is set then an error will be raised.
-	def __init__(self, content=None, close=False):
+	def __init__(self, content=None, close=False, content_filters=None):
 		self.content = content
 		self.close = close
+		self.content_filters = content_filters
 		if not self.close and self.content is None:
 			raise ValueError('content not set')
 
@@ -34,6 +35,9 @@ class HttpStreamFormat(Format):
 		if self.close:
 			out['action'] = 'close'
 		else:
+			if self.content_filters is not None:
+				out['content-filters'] = self.content_filters
+
 			is_text, val = _bin_or_text(self.content)
 			if is_text:
 				out['content'] = val
