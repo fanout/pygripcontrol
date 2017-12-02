@@ -5,7 +5,7 @@
 #    :copyright: (c) 2015 by Fanout, Inc.
 #    :license: MIT, see LICENSE for more details.
 
-from pubcontrol import PubControl, PubControlClient, ZmqPubControlClient, Item
+from pubcontrol import PubControl, Item
 from .httpresponseformat import HttpResponseFormat
 from .httpstreamformat import HttpStreamFormat
 from .gripcontrol import _is_basestring_instance

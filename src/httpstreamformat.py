@@ -7,7 +7,7 @@
 
 from base64 import b64encode
 from pubcontrol import Format
-from .gripcontrol import _is_basestring_instance, _bin_or_text
+from .gripcontrol import _bin_or_text
 
 # The HttpStreamFormat class is the format used to publish messages to
 # HTTP stream clients connected to a GRIP proxy.
