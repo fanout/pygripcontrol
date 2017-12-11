@@ -1,6 +1,5 @@
 import sys
 import unittest
-from base64 import b64encode
 from pubcontrol import Item
 import zmq
 

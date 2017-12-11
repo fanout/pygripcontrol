@@ -6,7 +6,6 @@ import calendar
 from datetime import datetime
 from struct import pack
 from base64 import b64encode, b64decode
-from pubcontrol import Item
 
 is_python3 = sys.version_info >= (3,)
 
