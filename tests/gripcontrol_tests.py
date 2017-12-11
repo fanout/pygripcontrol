@@ -56,6 +56,14 @@ class TestGripControl(unittest.TestCase):
 		self.assertEqual(config['control_uri'], 'http://api.fanout.io/realm/realm')
 		self.assertEqual('control_iss' in config, False)
 		self.assertEqual('key' in config, False)
+		uri = 'http://api.fanout.io/realm/realm?key=base64:geag%2B21321=='
+		config = parse_grip_uri(uri)
+		self.assertEqual(config['control_uri'], 'http://api.fanout.io/realm/realm')
+		self.assertEqual(config['key'], b64decode('geag+21321=='))
+		uri = 'http://api.fanout.io/realm/realm?key=base64:geag+21321=='
+		config = parse_grip_uri(uri)
+		self.assertEqual(config['control_uri'], 'http://api.fanout.io/realm/realm')
+		self.assertEqual(config['key'], b64decode('geag+21321=='))
 		uri = 'http://api.fanout.io/realm/realm?iss=realm' + \
                 '&key=base64:geag121321==&param1=value1&param2=value2'
 		config = parse_grip_uri(uri)

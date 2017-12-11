@@ -36,7 +36,9 @@ is_python3 = sys.version_info >= (3,)
 # encoded format.
 def parse_grip_uri(uri):
 	parsed = urlparse(uri)
-	params = parse_qs(parsed.query)
+	# HACK: work around '+' character in base64-encoded values
+	query = parsed.query.replace('+', '%2B')
+	params = parse_qs(query)
 	iss = None
 	key = None
 	if 'iss' in params:
