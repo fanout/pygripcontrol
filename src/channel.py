@@ -13,3 +13,4 @@ class Channel(object):
 	def __init__(self, name, prev_id=None):
 		self.name = name
 		self.prev_id = prev_id
+		self.filters = []

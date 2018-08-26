@@ -97,6 +97,8 @@ def create_grip_channel_header(channels):
 		s = channel.name
 		if channel.prev_id is not None:
 			s += '; prev-id=%s' % channel.prev_id
+		for f in channel.filters:
+			s += '; filter=%s' % f
 		parts.append(s)
 	return ', '.join(parts)
 
