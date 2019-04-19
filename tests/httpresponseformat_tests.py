@@ -25,7 +25,7 @@ class TestHttpResponseFormat(unittest.TestCase):
 
 	def test_export(self):
 		format = HttpResponseFormat()
-		self.assertEqual(format.export(), {})
+		self.assertEqual(format.export(), {'body': ''})
 		format = HttpResponseFormat('code', 'reason', 'headers', "body")
 		self.assertEqual(format.export(), {'code': 'code', 'reason': 'reason',
 				'headers': 'headers', 'body': "body"})

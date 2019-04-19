@@ -39,10 +39,12 @@ class HttpResponseFormat(Format):
 			out['reason'] = self.reason
 		if self.headers:
 			out['headers'] = self.headers
-		if self.body:
+		if self.body is not None:
 			is_text, val = _bin_or_text(self.body)
 			if is_text:
 				out['body'] = val
 			else:
 				out['body-bin'] = b64encode(val)
+		else:
+			out['body'] = ''
 		return out
