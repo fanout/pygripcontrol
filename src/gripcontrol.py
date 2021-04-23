@@ -72,8 +72,8 @@ def validate_sig(token, key):
 		token = token.encode('utf-8')	
 
 	try:
-		claim = jwt.decode(token, key)
-	except:
+		claim = jwt.decode(token, key, algorithms=['HS256'])
+	except Exception:
 		return False
 
 	exp = claim.get('exp')

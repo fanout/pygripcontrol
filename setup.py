@@ -12,7 +12,7 @@ url='https://github.com/fanout/pygripcontrol',
 license='MIT',
 package_dir={'gripcontrol': 'src'},
 packages=['gripcontrol'],
-install_requires=['PyJWT>=1.5,<2', 'pubcontrol>=3.0,<4', 'six>=1.10.0,<2'],
+install_requires=['PyJWT>=1.5,<3', 'pubcontrol>=3.0,<4', 'six>=1.10.0,<2'],
 classifiers=[
 	'Topic :: Utilities',
 	'License :: OSI Approved :: MIT License'
