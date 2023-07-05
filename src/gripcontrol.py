@@ -80,13 +80,13 @@ def parse_grip_uri(uri):
 # Validate the specified JWT token and key. This method is used to validate
 # the GRIP-SIG header coming from GRIP proxies such as Pushpin or Fanout.io.
 # Note that the token expiration is also verified.
-def validate_sig(token, key):
+def validate_sig(token, key, iss=None):
 	# jwt expects the token in utf-8
 	if _is_unicode_instance(token):
 		token = token.encode('utf-8')	
 
 	try:
-		claim = jwt.decode(token, key, algorithms=['HS256'])
+		claim = jwt.decode(token, key, algorithms=['HS256', 'RS256', 'ES256'])
 	except Exception:
 		return False
 
@@ -95,6 +95,9 @@ def validate_sig(token, key):
 		return False
 
 	if _timestamp_utcnow() >= exp:
+		return False
+
+	if iss is not None and claim.get('iss') != iss:
 		return False
 
 	return True
