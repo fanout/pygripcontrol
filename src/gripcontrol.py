@@ -41,6 +41,8 @@ def parse_grip_uri(uri):
 	params = parse_qs(query)
 	iss = None
 	key = None
+	verify_iss = None
+	verify_key = None
 	if 'iss' in params:
 		iss = params['iss'][0]
 		del params['iss']
@@ -49,6 +51,14 @@ def parse_grip_uri(uri):
 		del params['key']
 	if key is not None and key.startswith('base64:'):
 		key = b64decode(key[7:])
+	if 'verify-iss' in params:
+		verify_iss = params['verify-iss'][0]
+		del params['verify-iss']
+	if 'verify-key' in params:
+		verify_key = params['verify-key'][0]
+		del params['verify-key']
+	if verify_key is not None and verify_key.startswith('base64:'):
+		verify_key = b64decode(verify_key[7:])
 	qs = urlencode(params, True)
 	path = parsed.path
 	if path.endswith('/'):
@@ -61,6 +71,10 @@ def parse_grip_uri(uri):
 		out['control_iss'] = iss
 	if key:
 		out['key'] = key
+	if verify_iss:
+		out['verify_iss'] = verify_iss
+	if verify_key:
+		out['verify_key'] = verify_key
 	return out
 
 # Validate the specified JWT token and key. This method is used to validate
