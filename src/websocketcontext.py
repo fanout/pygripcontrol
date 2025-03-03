@@ -17,6 +17,11 @@ class WebSocketContext(object):
 		self.meta = deepcopy(meta)
 		self.grip_prefix = grip_prefix
 
+		# automatic handling of PING
+		for event in self.in_events:
+			if event.type == "PING":
+				self.out_events.append(WebSocketEvent(type="PONG", content=event.content))
+
 	def is_opening(self):
 		return (self.in_events and self.in_events[0].type == 'OPEN')
 
@@ -42,7 +47,8 @@ class WebSocketContext(object):
 			if self.in_events[self.read_index].type in ('TEXT', 'BINARY', 'CLOSE', 'DISCONNECT'):
 				e = self.in_events[self.read_index]
 			elif self.in_events[self.read_index].type == 'PING':
-				self.out_events.append(WebSocketEvent('PONG'))
+				# no need to handle PING as they were handled at init
+				pass
 			self.read_index += 1
 		if e is None:
 			raise IndexError('read from empty buffer')
