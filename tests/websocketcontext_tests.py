@@ -100,6 +100,36 @@ class TestWebSocketContext(unittest.TestCase):
         ws.close(code=100)
         self.assertEqual(ws.out_close_code, 100)
 
+    def test_ping_pong(self):
+        ws = WebSocketContext(
+            "conn-1",
+            {},
+            [
+                WebSocketEvent("PING", _b("ping1")),
+                WebSocketEvent("PONG"),
+                WebSocketEvent("TEXT", _b("hello")),
+                WebSocketEvent("PING", _b("ping2")),
+            ],
+        )
+        self.assertEqual(len(ws.out_events), 0)
+
+        self.assertTrue(ws.can_recv())
+        self.assertEqual(len(ws.out_events), 1)
+        self.assertEqual(ws.out_events[0].type, "PONG")
+        self.assertEqual(ws.out_events[0].content, _b("ping1"))
+
+        self.assertTrue(ws.can_recv())
+        self.assertEqual(len(ws.out_events), 1)
+
+        msg = ws.recv()
+        self.assertEqual(msg, "hello")
+        self.assertEqual(len(ws.out_events), 1)
+
+        self.assertFalse(ws.can_recv())
+        self.assertEqual(len(ws.out_events), 2)
+        self.assertEqual(ws.out_events[1].type, "PONG")
+        self.assertEqual(ws.out_events[1].content, _b("ping2"))
+
 
 if __name__ == "__main__":
     unittest.main()

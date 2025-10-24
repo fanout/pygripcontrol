@@ -32,12 +32,16 @@ class WebSocketContext(object):
             self.out_close_code = 0
 
     def can_recv(self):
+        self.handle_upcoming_pings_and_pongs()
+
         for n in range(self.read_index, len(self.in_events)):
             if self.in_events[n].type in ("TEXT", "BINARY", "CLOSE", "DISCONNECT"):
                 return True
         return False
 
     def recv(self):
+        self.handle_upcoming_pings_and_pongs()
+
         e = None
         while e is None and self.read_index < len(self.in_events):
             if self.in_events[self.read_index].type in (
@@ -47,8 +51,6 @@ class WebSocketContext(object):
                 "DISCONNECT",
             ):
                 e = self.in_events[self.read_index]
-            elif self.in_events[self.read_index].type == "PING":
-                self.out_events.append(WebSocketEvent("PONG"))
             self.read_index += 1
         if e is None:
             raise IndexError("read from empty buffer")
@@ -125,3 +127,15 @@ class WebSocketContext(object):
 
     def detach(self):
         self.send_control(websocket_control_message("detach"))
+
+    def handle_upcoming_pings_and_pongs(self):
+        while self.read_index < len(self.in_events) and self.in_events[
+            self.read_index
+        ].type in ("PING", "PONG"):
+            event = self.in_events[self.read_index]
+            self.read_index += 1
+
+            if event.type == "PING":
+                self.out_events.append(
+                    WebSocketEvent(type="PONG", content=event.content)
+                )
