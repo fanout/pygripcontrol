@@ -17,10 +17,12 @@ class WebSocketMessageFormat(Format):
     # Initialize with the message content and a flag indicating whether the
     # message content should be sent as base64-encoded binary data, or an
     # action to be performed.
-    def __init__(self, content=None, binary=False, action=None):
+    def __init__(self, content=None, binary=False, action=None, code=None, reason=None):
         self.content = content
         self.binary = binary
         self.action = action
+        self.code = code
+        self.reason = reason
 
     # The name used when publishing this format.
     def name(self):
@@ -43,4 +45,9 @@ class WebSocketMessageFormat(Format):
                 out["content"] = val
         else:
             out["action"] = self.action
+            if self.action == "close":
+                if self.code is not None:
+                    out["code"] = self.code
+                if self.reason:
+                    out["reason"] = self.reason
         return out

@@ -30,6 +30,10 @@ class TestWebSocketMessageFormat(unittest.TestCase):
     def test_action(self):
         format = WebSocketMessageFormat(action="close")
         self.assertEqual(format.export(), {"action": "close"})
+        format = WebSocketMessageFormat(action="close", code=1013, reason="bye for now")
+        self.assertEqual(
+            format.export(), {"action": "close", "code": 1013, "reason": "bye for now"}
+        )
 
 
 if __name__ == "__main__":
