@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="gripcontrol",
-    version="4.2.1",
+    version="4.3.0",
     description="GRIP library",
     author="Justin Karneges",
     author_email="justin@fanout.io",
