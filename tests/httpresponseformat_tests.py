@@ -46,6 +46,10 @@ class TestHttpResponseFormat(unittest.TestCase):
             },
         )
 
+    def test_action(self):
+        format = HttpResponseFormat(action="close")
+        self.assertEqual(format.export(), {"action": "close"})
+
 
 if __name__ == "__main__":
     unittest.main()

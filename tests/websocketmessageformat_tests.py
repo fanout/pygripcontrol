@@ -27,6 +27,10 @@ class TestWebSocketMessageFormat(unittest.TestCase):
             format.export(), {"content-bin": b64encode("content".encode("ascii"))}
         )
 
+    def test_action(self):
+        format = WebSocketMessageFormat(action="close")
+        self.assertEqual(format.export(), {"action": "close"})
+
 
 if __name__ == "__main__":
     unittest.main()

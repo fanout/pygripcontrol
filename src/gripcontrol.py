@@ -25,7 +25,6 @@ from .response import Response
 from .websocketevent import WebSocketEvent
 from six.moves.urllib_parse import urlparse, parse_qs, urlencode
 
-
 is_python3 = sys.version_info >= (3,)
 
 

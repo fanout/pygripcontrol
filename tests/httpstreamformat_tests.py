@@ -37,6 +37,17 @@ class TestHttpStreamFormat(unittest.TestCase):
             format.export(), {"content-bin": b64encode(pack("hhh", 253, 254, 255))}
         )
 
+    def test_action(self):
+        format = HttpStreamFormat(action="close")
+        self.assertEqual(format.close, True)
+        self.assertEqual(format.export(), {"action": "close"})
+        format = HttpStreamFormat(close=True)
+        self.assertEqual(format.close, True)
+        self.assertEqual(format.export(), {"action": "close"})
+        format = HttpStreamFormat(action="hint")
+        self.assertEqual(format.close, False)
+        self.assertEqual(format.export(), {"action": "hint"})
+
 
 if __name__ == "__main__":
     unittest.main()

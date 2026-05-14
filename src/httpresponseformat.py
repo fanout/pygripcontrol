@@ -15,15 +15,23 @@ from .gripcontrol import _bin_or_text
 class HttpResponseFormat(Format):
 
     # Initialize with the message code, reason, headers, and body to send
-    # to the client when the message is published.
+    # to the client, or an action to be performed, when the message is
+    # published.
     def __init__(
-        self, code=None, reason=None, headers=None, body=None, content_filters=None
+        self,
+        code=None,
+        reason=None,
+        headers=None,
+        body=None,
+        content_filters=None,
+        action=None,
     ):
         self.code = code
         self.reason = reason
         self.headers = headers
         self.body = body
         self.content_filters = content_filters
+        self.action = action
 
     # The name used when publishing this format.
     def name(self):
@@ -34,20 +42,23 @@ class HttpResponseFormat(Format):
     # binary.
     def export(self):
         out = dict()
-        if self.content_filters is not None:
-            out["content-filters"] = self.content_filters
-        if self.code is not None:
-            out["code"] = self.code
-        if self.reason:
-            out["reason"] = self.reason
-        if self.headers:
-            out["headers"] = self.headers
-        if self.body is not None:
-            is_text, val = _bin_or_text(self.body)
-            if is_text:
-                out["body"] = val
+        if not self.action or self.action == "send":
+            if self.content_filters is not None:
+                out["content-filters"] = self.content_filters
+            if self.code is not None:
+                out["code"] = self.code
+            if self.reason:
+                out["reason"] = self.reason
+            if self.headers:
+                out["headers"] = self.headers
+            if self.body is not None:
+                is_text, val = _bin_or_text(self.body)
+                if is_text:
+                    out["body"] = val
+                else:
+                    out["body-bin"] = b64encode(val)
             else:
-                out["body-bin"] = b64encode(val)
+                out["body"] = ""
         else:
-            out["body"] = ""
+            out["action"] = self.action
         return out

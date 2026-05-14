@@ -14,14 +14,19 @@ from .gripcontrol import _bin_or_text
 # HTTP stream clients connected to a GRIP proxy.
 class HttpStreamFormat(Format):
 
-    # Initialize with either the message content or a boolean indicating that
-    # the streaming connection should be closed. If neither the content nor
-    # the boolean flag is set then an error will be raised.
-    def __init__(self, content=None, close=False, content_filters=None):
+    # Initialize with either the message content or an action. Setting
+    # `close=True` is the same as setting `action="close"`. If neither
+    # content nor an action is set then an error will be raised.
+    def __init__(self, content=None, close=False, content_filters=None, action=None):
+        if close and action and action != "close":
+            raise ValueError("conflicting action and close arguments provided")
         self.content = content
-        self.close = close
+        self.close = close or action == "close"
         self.content_filters = content_filters
-        if not self.close and self.content is None:
+        if close and not action:
+            action = "close"
+        self.action = action
+        if not self.close and not self.action and self.content is None:
             raise ValueError("content not set")
 
     # The name used when publishing this format.
@@ -29,13 +34,11 @@ class HttpStreamFormat(Format):
         return "http-stream"
 
     # Exports the message in the required format depending on whether the
-    # message content is binary or not, or whether the connection should
-    # be closed.
+    # message content is binary or not, and what kind of action should be
+    # performed.
     def export(self):
         out = dict()
-        if self.close:
-            out["action"] = "close"
-        else:
+        if not self.action or self.action == "send":
             if self.content_filters is not None:
                 out["content-filters"] = self.content_filters
 
@@ -44,4 +47,6 @@ class HttpStreamFormat(Format):
                 out["content"] = val
             else:
                 out["content-bin"] = b64encode(val)
+        else:
+            out["action"] = self.action
         return out
